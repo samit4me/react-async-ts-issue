@@ -15,22 +15,24 @@ interface UserResponse {
 }
 
 async function dataFetching(
-  { id }: Props,
+  { id }: any, // Props should work
   { signal }: AbortController
 ): Promise<UserResponse> {
-  const res = await fetch(`https://reqres.in/api/users/${id}`, { signal });
+  const res = await fetch(
+    `https://reqres.in/api/users/${id}?ts=${new Date().getTime()}`,
+    { signal }
+  );
   if (!res.ok) throw new Error(res.statusText);
   const { data } = await res.json();
   return data;
 }
 
 function User({ id }: Props) {
-  // TS throws errors with both of these examples.
-  // Need to either:
-  // - @ts-ignore
-  // - Change `dataFetching(props: any)` :(
-  const { data, error, isPending } = useAsync(dataFetching, { id });
-  // const { data, error, isPending } = useAsync({ promiseFn: dataFetching, id });
+  const { data, error, isPending } = useAsync({
+    promiseFn: dataFetching,
+    watch: id,
+    id
+  });
 
   if (isPending) return <span>Loading...</span>;
   if (error) return <span>{`Something went wrong: ${error.message}`}</span>;
